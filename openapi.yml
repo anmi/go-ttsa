@@ -1,0 +1,714 @@
+openapi: 3.0.0
+info:
+  contact:
+    email: anmi.asm@gmail.com
+  description: Tiny tracker server API
+  license:
+    name: Apache 2.0
+    url: http://www.apache.org/licenses/LICENSE-2.0.html
+  title: Tiny tracker
+  version: 1.0.0
+servers:
+- url: /api
+paths:
+  /auth/user:
+    get:
+      description: Get current user info
+      operationId: getCurrentUser
+      parameters: []
+      responses:
+        "200":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/CurrentUser'
+          description: Current User Info
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+      tags:
+      - auth
+    post:
+      description: Sign up user
+      operationId: signUp
+      parameters: []
+      requestBody:
+        $ref: '#/components/requestBodies/SignUpForm'
+      responses:
+        "200":
+          description: Success
+      tags:
+      - auth
+  /auth/session:
+    delete:
+      description: Log out
+      operationId: logOut
+      parameters: []
+      responses:
+        "200":
+          description: Logged out
+      tags:
+      - auth
+    post:
+      description: ""
+      operationId: signIn
+      parameters: []
+      requestBody:
+        $ref: '#/components/requestBodies/SignInForm'
+      responses:
+        "200":
+          description: Logged in
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/SignInResponse'
+        "400":
+          description: Wrong username or password
+          content:
+            application/json:
+              schema:
+                $ref: "#/components/schemas/SignInWrongUsernameResponse"
+      tags:
+      - auth
+  /tasks:
+    post:
+      description: "Create Task"
+      operationId: createTask
+      tags:
+      - tasks
+      parameters: []
+      requestBody:
+        $ref: '#/components/requestBodies/NewTaskForm'
+      responses:
+        "200":
+          description: Created task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+  /tasks/{id}/todo:
+    get:
+      description: Get next task to do
+      operationId: getTodo
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Task id which children would be iterated
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Got next task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskTodo'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+  /tasks/{id}:
+    put:
+      description: Update Task
+      operationId: updateTask
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to update
+          schema:
+            type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/TaskUpdateForm'
+      responses:
+        "200":
+          description: Got task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+    get:
+      description: Get Task
+      operationId: getTask
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to retrieve
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Got task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+  /tasks/{id}/done:
+    put:
+      description: Set Task Done
+      operationId: setTaskDone
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to set done
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Set Done
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+    delete:
+      description: Set Task not done
+      operationId: setTaskNotDone
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to set done
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Set Not Done
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/Task'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+  /tasks/{id}/dependencies/{depends_on_id}:
+    delete:
+      description: Unlink task
+      operationId: unlinkTask
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: Id of task that should loose dependency
+          schema:
+            type: integer
+        - name: depends_on_id
+          in: path
+          required: true
+          description: Id of task that should no longer be dependent from
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Unlinked task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ResponseOk'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+        "404":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorNotFound'
+          description: NotFound
+  /tasks/{id}/dependencies:
+    get:
+      description: Get dependencies
+      operationId: getTaskDependencies
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to retrieve
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Got task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDependencies'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+    post:
+      description: Make task with id dependant of another one
+      operationId: linkTask
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: id of the task that should be dependant
+          schema:
+            type: integer
+      requestBody:
+        $ref: '#/components/requestBodies/DependencyForm'
+      responses:
+        "200":
+          description: Linked task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRelation'
+        "400":
+          description: Circular dependency error
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorCircular'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+  /tasks/{id}/parents-tree:
+    get:
+      description: Get parent tasks tree
+      operationId: getTasksParentsTree
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to retreive parents from
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Get parents tree of the task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskRelationsList'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+  /tasks/{id}/parents:
+    get:
+      description: Get parent tasks
+      operationId: getTasksParents
+      tags:
+      - tasks
+      parameters:
+        - name: id
+          in: path
+          required: true
+          description: The id of the task to retreive parents from
+          schema:
+            type: integer
+      responses:
+        "200":
+          description: Get parents of the task
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TaskDependencies'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+        "403":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorForbidden'
+          description: Forbidden
+  /tasks/search:
+    get:
+      description: Search task
+      operationId: searchTask
+      tags:
+      - tasks
+      parameters:
+        - name: title
+          in: query
+          description: title to search
+          required: true
+          schema:
+            type: string
+      responses:
+        "200": 
+          description: Search task by name
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/TasksList'
+        "401":
+          content:
+            application/json:
+              schema:
+                $ref: '#/components/schemas/ErrorUnauthorized'
+          description: Unauthorized
+components:
+  callbacks: {}
+  links: {}
+  requestBodies:
+    SignUpForm:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SignUpForm'
+    SignInForm:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/SignInForm'
+    NewTaskForm:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/NewTaskForm'
+    TaskUpdateForm:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/TaskUpdateForm'
+    DependencyForm:
+      content:
+        application/json:
+          schema:
+            $ref: '#/components/schemas/DependencyForm'
+  schemas:
+    ErrorUnauthorized:
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+          enum:
+          - Unauthorized
+      required:
+        - message
+        - code
+      type: object
+    ErrorForbidden:
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+          enum:
+          - Forbidden
+      required:
+        - message
+      type: object
+    ErrorCircular:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+          enum:
+          - Circular
+      required:
+        - message
+    ErrorNotFound:
+      type: object
+      properties:
+        message:
+          type: string
+        code:
+          type: string
+          enum:
+          - NotFound
+      required:
+        - message
+    SignInForm:
+      example:
+        password: password
+        username: username
+      properties:
+        username:
+          type: string
+        password:
+          type: string
+      type: object
+      required:
+        - username
+        - password
+    SignInResponse:
+      properties:
+        ok:
+          type: string
+      type: object
+      required:
+        - ok
+    SignInWrongUsernameResponse:
+      properties:
+        errorrr:
+          type: string
+          enum: [WrongUsername, other]
+      type: object
+      required:
+        - ok
+    SignUpForm:
+      example:
+        password: password
+        email: email
+        username: username
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        password:
+          type: string
+      type: object
+      required:
+        - username
+        - email
+        - password
+    CurrentUser:
+      example:
+        email: email
+        username: username
+        root_id: number
+      properties:
+        username:
+          type: string
+        email:
+          type: string
+        root_id:
+          type: integer
+      type: object
+      required:
+        - username
+        - email
+    NewTaskForm:
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+        parentId:
+          type: integer
+      type: object
+      required:
+        - title
+        - description
+    TaskUpdateForm:
+      properties:
+        title:
+          type: string
+        description:
+          type: string
+      type: object
+    Task:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        description:
+          type: string
+        result:
+          type: string
+        createdAt:
+          type: string
+        doneAt:
+          type: string
+      required:
+        - id
+        - title
+        - description
+        - result
+        - createdAt
+    TaskDependencies:
+      type: object 
+      properties:
+        dependencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/Task'
+      required:
+        - dependencies
+    TaskRelationsList:
+      type: object
+      properties:
+        dependencies:
+          type: array
+          items:
+            $ref: '#/components/schemas/TaskRelation'
+      required:
+        - dependencies
+    TaskRelation:
+      type: object
+      properties:
+        taskId:
+          type: integer
+        dependsOnId:
+          type: integer
+      required:
+        - taskId
+        - dependsOnId
+    DependencyForm:
+      type: object
+      properties:
+        dependencyTaskId:
+          type: integer
+      required:
+        - dependencyTaskId
+    TasksList:
+      type: object
+      properties:
+        tasks:
+          type: array
+          items:
+            $ref: "#/components/schemas/Task"
+      required:
+        - tasks
+    TaskShort:
+      type: object
+      properties:
+        id:
+          type: integer
+        title:
+          type: string
+        doneAt:
+          type: string
+      required:
+        - id
+        - title
+    TaskTodo:
+      type: object
+      properties:
+        path:
+          type: array
+          items:
+            $ref: "#/components/schemas/TaskShort"
+      required:
+        - path
+    ResponseOk:
+      type: object
+      properties:
+        result:
+          type: string
